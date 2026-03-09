@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Astra Admin — Panel de Control</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07070f; --bg2: #0d0d1a; --bg3: #111128;
+      --purple: #8b5cf6; --purple-bright: #a78bfa; --purple-dark: #4c1d95;
+      --gold: #d4a843; --gold-bright: #f0c060;
+      --green: #10b981; --red: #ef4444;
+      --glass: rgba(139,92,246,0.07);
+      --glass-border: rgba(139,92,246,0.2);
+      --text: #e8e0ff; --text-dim: #9ca3af; --text-muted: #6b7280;
+      --font-heading: 'Cinzel', serif;
+      --font-body: 'Crimson Pro', serif;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 16px; min-height: 100vh; }
+
+    /* LOGIN */
+    .login-screen {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(ellipse at 30% 20%, rgba(139,92,246,0.15), transparent 60%),
+                  radial-gradient(ellipse at 70% 80%, rgba(212,168,67,0.1), transparent 60%);
+    }
+    .login-box {
+      background: rgba(13,13,26,0.9); border: 1px solid var(--glass-border);
+      backdrop-filter: blur(20px); border-radius: 1.5rem;
+      padding: 3rem; width: 380px; text-align: center;
+    }
+    .login-logo {
+      font-family: var(--font-heading); font-size: 0.7rem;
+      letter-spacing: 0.4em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 0.5rem;
+    }
+    .login-title {
+      font-family: var(--font-heading); font-size: 1.6rem;
+      color: var(--purple-bright); margin-bottom: 0.5rem;
+    }
+    .login-sub { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 2rem; }
+    .field { margin-bottom: 1rem; text-align: left; }
+    .field label {
+      display: block; font-family: var(--font-heading);
+      font-size: 0.65rem; letter-spacing: 0.2em;
+      text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.4rem;
+    }
+    .field input {
+      width: 100%; background: rgba(139,92,246,0.07);
+      border: 1px solid var(--glass-border); border-radius: 0.75rem;
+      padding: 0.75rem 1rem; color: var(--text);
+      font-family: var(--font-body); font-size: 1rem; outline: none;
+      transition: border-color 0.3s;
+    }
+    .field input:focus { border-color: var(--purple); }
+    .btn-login {
+      width: 100%; background: linear-gradient(135deg, var(--purple), #6d28d9);
+      border: none; border-radius: 0.75rem; color: white;
+      padding: 0.85rem; font-family: var(--font-heading);
+      font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase;
+      cursor: pointer; margin-top: 0.5rem; transition: all 0.3s;
+    }
+    .btn-login:hover { transform: translateY(-1px); box-shadow: 0 0 30px rgba(139,92,246,0.4); }
+    .login-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 1rem; }
+
+    /* ADMIN LAYOUT */
+    .admin { display: none; min-height: 100vh; }
+    .admin.active { display: flex; }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 240px; min-height: 100vh;
+      background: var(--bg2); border-right: 1px solid var(--glass-border);
+      display: flex; flex-direction: column;
+      flex-shrink: 0;
+    }
+    .sidebar-logo {
+      padding: 1.5rem; border-bottom: 1px solid var(--glass-border);
+      font-family: var(--font-heading); font-size: 0.7rem;
+      letter-spacing: 0.3em; text-transform: uppercase;
+    }
+    .sidebar-logo span { color: var(--gold); }
+    .sidebar-logo small { display: block; color: var(--text-muted); font-size: 0.6rem; margin-top: 0.2rem; letter-spacing: 0.2em; }
+
+    .sidebar-nav { flex: 1; padding: 1rem 0; }
+    .nav-group-label {
+      padding: 0.75rem 1.25rem 0.3rem;
+      font-family: var(--font-heading); font-size: 0.55rem;
+      letter-spacing: 0.35em; text-transform: uppercase; color: var(--text-muted);
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.7rem 1.25rem; cursor: pointer;
+      font-family: var(--font-heading); font-size: 0.72rem;
+      letter-spacing: 0.1em; color: var(--text-muted);
+      transition: all 0.2s; border-left: 2px solid transparent;
+    }
+    .nav-item:hover { background: var(--glass); color: var(--text); }
+    .nav-item.active { background: rgba(139,92,246,0.1); color: var(--purple-bright); border-left-color: var(--purple); }
+    .nav-icon { font-size: 1rem; width: 20px; text-align: center; }
+    .nav-badge {
+      margin-left: auto; background: var(--purple); color: white;
+      border-radius: 2rem; padding: 0.1rem 0.5rem; font-size: 0.6rem;
+    }
+
+    .sidebar-footer {
+      padding: 1rem 1.25rem; border-top: 1px solid var(--glass-border);
+    }
+    .logout-btn {
+      width: 100%; background: transparent; border: 1px solid rgba(239,68,68,0.3);
+      color: rgba(239,68,68,0.7); border-radius: 0.5rem;
+      padding: 0.5rem; font-family: var(--font-heading);
+      font-size: 0.65rem; letter-spacing: 0.15em; cursor: pointer;
+      transition: all 0.3s;
+    }
+    .logout-btn:hover { border-color: var(--red); color: var(--red); background: rgba(239,68,68,0.05); }
+
+    /* MAIN CONTENT */
+    .main { flex: 1; overflow-y: auto; }
+
+    .topbar {
+      padding: 1.25rem 2rem; border-bottom: 1px solid var(--glass-border);
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(13,13,26,0.5); backdrop-filter: blur(10px);
+      position: sticky; top: 0; z-index: 10;
+    }
+    .topbar-title { font-family: var(--font-heading); font-size: 1rem; color: var(--text); }
+    .topbar-sub { font-size: 0.8rem; color: var(--text-muted); }
+    .topbar-actions { display: flex; gap: 0.75rem; }
+
+    .btn-sm {
+      padding: 0.5rem 1.1rem; border-radius: 0.5rem;
+      font-family: var(--font-heading); font-size: 0.65rem;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      cursor: pointer; transition: all 0.3s; border: none;
+    }
+    .btn-primary-sm {
+      background: linear-gradient(135deg, var(--purple), #6d28d9); color: white;
+    }
+    .btn-primary-sm:hover { box-shadow: 0 0 15px rgba(139,92,246,0.4); }
+    .btn-ghost-sm {
+      background: var(--glass); border: 1px solid var(--glass-border); color: var(--text-dim);
+    }
+    .btn-ghost-sm:hover { border-color: var(--purple); color: var(--purple-bright); }
+    .btn-danger-sm {
+      background: transparent; border: 1px solid rgba(239,68,68,0.3); color: rgba(239,68,68,0.7);
+    }
+    .btn-danger-sm:hover { border-color: var(--red); color: var(--red); }
+
+    /* PAGE CONTENT */
+    .page { padding: 2rem; display: none; }
+    .page.active { display: block; }
+
+    /* STATS GRID */
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--glass); border: 1px solid var(--glass-border);
+      border-radius: 1rem; padding: 1.5rem; position: relative; overflow: hidden;
+    }
+    .stat-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--purple), transparent);
+    }
+    .stat-icon { font-size: 1.5rem; margin-bottom: 0.75rem; display: block; }
+    .stat-value {
+      font-family: var(--font-heading); font-size: 1.8rem; color: var(--purple-bright);
+      display: block; margin-bottom: 0.2rem;
+    }
+    .stat-label { font-size: 0.8rem; color: var(--text-muted); font-family: var(--font-heading); letter-spacing: 0.1em; }
+    .stat-trend { font-size: 0.75rem; color: var(--green); margin-top: 0.3rem; }
+
+    /* ARTICLES TABLE */
+    .articles-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: gap;
+    }
+    .table-wrapper {
+      background: var(--glass); border: 1px solid var(--glass-border);
+      border-radius: 1rem; overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      padding: 0.85rem 1.25rem; text-align: left;
+      font-family: var(--font-heading); font-size: 0.62rem;
+      letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted);
+      border-bottom: 1px solid var(--glass-border); background: rgba(0,0,0,0.2);
+    }
+    td { padding: 0.9rem 1.25rem; border-bottom: 1px solid rgba(139,92,246,0.08); font-size: 0.9rem; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(139,92,246,0.04); }
+
+    .badge {
+      display: inline-block; padding: 0.2rem 0.6rem; border-radius: 2rem;
+      font-family: var(--font-heading); font-size: 0.6rem; letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .badge-tarot { background: rgba(139,92,246,0.2); color: var(--purple-bright); border: 1px solid rgba(139,92,246,0.3); }
+    .badge-numerologia { background: rgba(212,168,67,0.15); color: var(--gold); border: 1px solid rgba(212,168,67,0.3); }
+    .badge-horoscopo { background: rgba(45,212,191,0.15); color: #2dd4bf; border: 1px solid rgba(45,212,191,0.3); }
+    .badge-misterio { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+    .badge-published { background: rgba(16,185,129,0.15); color: var(--green); border: 1px solid rgba(16,185,129,0.3); }
+    .badge-draft { background: rgba(107,114,128,0.15); color: #9ca3af; border: 1px solid rgba(107,114,128,0.3); }
+
+    .table-actions { display: flex; gap: 0.5rem; }
+
+    /* EDITOR */
+    .editor-layout { display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; align-items: start; }
+    @media (max-width: 900px) { .editor-layout { grid-template-columns: 1fr; } }
+
+    .editor-card {
+      background: var(--glass); border: 1px solid var(--glass-border); border-radius: 1rem; padding: 1.5rem;
+    }
+    .editor-card h3 {
+      font-family: var(--font-heading); font-size: 0.7rem;
+      letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold);
+      margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--glass-border);
+    }
+
+    .form-field { margin-bottom: 1.25rem; }
+    .form-field label {
+      display: block; font-family: var(--font-heading); font-size: 0.62rem;
+      letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted);
+      margin-bottom: 0.4rem;
+    }
+    .form-field input, .form-field select, .form-field textarea {
+      width: 100%; background: rgba(0,0,0,0.3);
+      border: 1px solid var(--glass-border); border-radius: 0.5rem;
+      padding: 0.7rem 1rem; color: var(--text);
+      font-family: var(--font-body); font-size: 0.95rem; outline: none;
+      transition: border-color 0.3s; resize: vertical;
+    }
+    .form-field input:focus, .form-field select:focus, .form-field textarea:focus {
+      border-color: var(--purple); box-shadow: 0 0 0 2px rgba(139,92,246,0.15);
+    }
+    .form-field select option { background: var(--bg2); }
+
+    .char-count { font-size: 0.72rem; color: var(--text-muted); text-align: right; margin-top: 0.25rem; }
+    .char-good { color: var(--green); }
+    .char-warn { color: var(--gold); }
+    .char-bad { color: var(--red); }
+
+    .toolbar {
+      display: flex; gap: 0.25rem; flex-wrap: wrap;
+      padding: 0.5rem; background: rgba(0,0,0,0.2);
+      border: 1px solid var(--glass-border); border-radius: 0.5rem 0.5rem 0 0;
+      border-bottom: none;
+    }
+    .toolbar button {
+      background: transparent; border: none; color: var(--text-dim);
+      padding: 0.35rem 0.5rem; border-radius: 0.25rem; cursor: pointer;
+      font-size: 0.9rem; transition: all 0.2s;
+    }
+    .toolbar button:hover { background: var(--glass); color: var(--purple-bright); }
+    .toolbar-sep { width: 1px; background: var(--glass-border); margin: 0 0.25rem; }
+
+    .wysiwyg {
+      min-height: 300px; background: rgba(0,0,0,0.3);
+      border: 1px solid var(--glass-border); border-radius: 0 0 0.5rem 0.5rem;
+      padding: 1rem; outline: none; line-height: 1.8;
+      font-family: var(--font-body); font-size: 1rem; color: var(--text);
+    }
+    .wysiwyg:focus { border-color: var(--purple); }
+    .wysiwyg h2 { font-family: var(--font-heading); color: var(--purple-bright); margin: 1rem 0 0.5rem; }
+    .wysiwyg h3 { font-family: var(--font-heading); color: var(--gold); margin: 0.75rem 0 0.4rem; font-size: 1rem; }
+    .wysiwyg b { color: var(--gold-bright); }
+    .wysiwyg i { color: var(--text-dim); }
+
+    .seo-score {
+      display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;
+    }
+    .seo-bar { flex: 1; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+    .seo-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s, background 0.5s; }
+    .seo-label { font-family: var(--font-heading); font-size: 0.65rem; letter-spacing: 0.1em; color: var(--text-muted); }
+
+    .seo-tip {
+      font-size: 0.8rem; color: var(--text-muted); padding: 0.5rem 0.75rem;
+      background: rgba(0,0,0,0.2); border-radius: 0.4rem; margin-bottom: 0.5rem;
+      border-left: 2px solid transparent;
+    }
+    .seo-tip.good { border-left-color: var(--green); color: var(--green); }
+    .seo-tip.warn { border-left-color: var(--gold); }
+    .seo-tip.bad { border-left-color: var(--red); color: #f87171; }
+
+    /* TOAST */
+    .toast {
+      position: fixed; bottom: 2rem; right: 2rem; z-index: 1000;
+      background: var(--bg3); border: 1px solid var(--glass-border);
+      border-radius: 0.75rem; padding: 1rem 1.5rem;
+      font-family: var(--font-heading); font-size: 0.75rem;
+      letter-spacing: 0.1em; color: var(--text);
+      transform: translateY(100px); opacity: 0;
+      transition: all 0.3s; pointer-events: none;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-color: var(--green); color: var(--green); }
+    .toast.error { border-color: var(--red); color: var(--red); }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <p class="login-logo">✦ Astra ✦</p>
+    <h1 class="login-title">Panel Admin</h1>
+    <p class="login-sub">Acceso restringido al administrador</p>
+    <div class="field">
+      <label>Usuario</label>
+      <input type="text" id="login-user" placeholder="admin" />
+    </div>
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" />
+    </div>
+    <button class="btn-login" onclick="doLogin()">✦ Ingresar</button>
+    <p class="login-hint">Demo: admin / astra2025</p>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div class="admin" id="admin">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <span>✦ Astra</span>
+      <small>Panel de Administración</small>
+    </div>
+    <nav class="sidebar-nav">
+      <p class="nav-group-label">Principal</p>
+      <div class="nav-item active" onclick="showPage('dashboard',this)">
+        <span class="nav-icon">📊</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="showPage('articles',this)">
+        <span class="nav-icon">📝</span> Artículos
+        <span class="nav-badge" id="article-count">6</span>
+      </div>
+      <div class="nav-item" onclick="showPage('editor',this)">
+        <span class="nav-icon">✏️</span> Nuevo Artículo
+      </div>
+      <p class="nav-group-label" style="margin-top:0.75rem;">Contenido</p>
+      <div class="nav-item" onclick="showPage('tarot-config',this)">
+        <span class="nav-icon">🔮</span> Config. Tarot
+      </div>
+      <div class="nav-item" onclick="showPage('seo',this)">
+        <span class="nav-icon">🔍</span> SEO Global
+      </div>
+      <p class="nav-group-label" style="margin-top:0.75rem;">Monetización</p>
+      <div class="nav-item" onclick="showPage('premium',this)">
+        <span class="nav-icon">⭐</span> Premium / Pagos
+      </div>
+      <div class="nav-item" onclick="showPage('ads',this)">
+        <span class="nav-icon">📢</span> Publicidad
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="doLogout()">Cerrar Sesión</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="page-title">Dashboard</div>
+        <div class="topbar-sub" id="page-sub">Resumen general de Astra</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn-sm btn-ghost-sm" onclick="showPage('editor',document.querySelector('.nav-item:nth-child(5))'))">+ Nuevo Artículo</button>
+        <button class="btn-sm btn-primary-sm">Ver Sitio →</button>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div style="padding:2rem;">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-icon">👁️</span>
+            <span class="stat-value">12,847</span>
+            <span class="stat-label">Visitas (30 días)</span>
+            <div class="stat-trend">↑ +23% vs mes anterior</div>
+          </div>
+          <div class="stat-card" style="--purple:#d4a843;--purple-bright:#f0c060;">
+            <span class="stat-icon">🔮</span>
+            <span class="stat-value">3,291</span>
+            <span class="stat-label">Lecturas realizadas</span>
+            <div class="stat-trend">↑ +41% vs mes anterior</div>
+          </div>
+          <div class="stat-card" style="--purple:#10b981;--purple-bright:#34d399;">
+            <span class="stat-icon">⭐</span>
+            <span class="stat-value">87</span>
+            <span class="stat-label">Suscriptores Premium</span>
+            <div class="stat-trend">↑ +12 esta semana</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon">💰</span>
+            <span class="stat-value">$434</span>
+            <span class="stat-label">Ingresos (30 días)</span>
+            <div class="stat-trend">↑ AdSense + Premium</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:1.5rem;">
+          <div class="editor-card">
+            <h3>✦ Artículos Recientes</h3>
+            <div style="display:flex;flex-direction:column;gap:0.75rem;">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid var(--glass-border);">
+                <div>
+                  <div style="font-family:var(--font-heading);font-size:0.8rem;margin-bottom:0.2rem;">Las 5 cartas que predicen cambios...</div>
+                  <span class="badge badge-tarot">Tarot</span>
+                </div>
+                <span class="badge badge-published">Publicado</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid var(--glass-border);">
+                <div>
+                  <div style="font-family:var(--font-heading);font-size:0.8rem;margin-bottom:0.2rem;">Triángulo de las Bermudas...</div>
+                  <span class="badge badge-misterio">Misterio</span>
+                </div>
+                <span class="badge badge-published">Publicado</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;">
+                <div>
+                  <div style="font-family:var(--font-heading);font-size:0.8rem;margin-bottom:0.2rem;">Tu Número de Sombra...</div>
+                  <span class="badge badge-numerologia">Numerología</span>
+                </div>
+                <span class="badge badge-draft">Borrador</span>
+              </div>
+            </div>
+          </div>
+          <div class="editor-card">
+            <h3>✦ Estado SEO</h3>
+            <div style="display:flex;flex-direction:column;gap:0.75rem;">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:0.3rem;">
+                  <span style="font-family:var(--font-heading);color:var(--text-muted);">Core Web Vitals</span>
+                  <span style="color:var(--green);">Bueno</span>
+                </div>
+                <div class="seo-bar"><div class="seo-bar-fill" style="width:85%;background:var(--green);"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:0.3rem;">
+                  <span style="font-family:var(--font-heading);color:var(--text-muted);">Meta-tags completos</span>
+                  <span style="color:var(--gold);">4/6 artículos</span>
+                </div>
+                <div class="seo-bar"><div class="seo-bar-fill" style="width:67%;background:var(--gold);"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:0.3rem;">
+                  <span style="font-family:var(--font-heading);color:var(--text-muted);">Sitemap actualizado</span>
+                  <span style="color:var(--green);">Sí</span>
+                </div>
+                <div class="seo-bar"><div class="seo-bar-fill" style="width:100%;background:var(--green);"></div></div>
+              </div>
+            </div>
+            <div style="margin-top:1.25rem;padding:0.75rem;background:rgba(212,168,67,0.07);border:1px solid rgba(212,168,67,0.2);border-radius:0.5rem;font-size:0.8rem;color:var(--gold);">
+              ⚠️ 2 artículos sin meta-description. Completalos para mejorar el ranking.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ARTICLES LIST -->
+    <div class="page" id="page-articles">
+      <div style="padding:2rem;">
+        <div class="articles-header">
+          <div>
+            <h2 style="font-family:var(--font-heading);color:var(--text);font-size:1.1rem;">Todos los artículos</h2>
+            <p style="font-size:0.85rem;color:var(--text-muted);margin-top:0.2rem;">6 artículos · 4 publicados · 2 borradores</p>
+          </div>
+          <button class="btn-sm btn-primary-sm" onclick="showPage('editor',null);editNew()">+ Nuevo Artículo</button>
+        </div>
+        <div class="table-wrapper">
+          <table id="articles-table">
+            <thead>
+              <tr>
+                <th>Título</th>
+                <th>Categoría</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+                <th>Vistas</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="articles-tbody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDITOR -->
+    <div class="page" id="page-editor">
+      <div style="padding:2rem;">
+        <div class="editor-layout">
+          <!-- LEFT: CONTENT -->
+          <div>
+            <div class="editor-card" style="margin-bottom:1.5rem;">
+              <h3>✦ Contenido del Artículo</h3>
+              <div class="form-field">
+                <label>Título del Artículo</label>
+                <input type="text" id="art-title" placeholder="Ej: Las 7 señales del universo que no podés ignorar..." oninput="updateSeoPreview()" />
+              </div>
+              <div class="form-field">
+                <label>Slug (URL amigable)</label>
+                <input type="text" id="art-slug" placeholder="las-7-senales-del-universo" style="font-family:monospace;font-size:0.9rem;" />
+              </div>
+              <div class="form-field">
+                <label>Extracto / Introducción</label>
+                <textarea id="art-excerpt" rows="2" placeholder="Breve descripción que aparece en las listas y tarjetas..." oninput="updateSeoPreview()"></textarea>
+              </div>
+              <div class="form-field">
+                <label>Cuerpo del Artículo</label>
+                <div class="toolbar">
+                  <button onclick="fmt('bold')" title="Negrita"><b>B</b></button>
+                  <button onclick="fmt('italic')" title="Cursiva"><i>I</i></button>
+                  <button onclick="fmt('underline')" title="Subrayado"><u>U</u></button>
+                  <div class="toolbar-sep"></div>
+                  <button onclick="fmtBlock('h2')" title="Título 2">H2</button>
+                  <button onclick="fmtBlock('h3')" title="Título 3">H3</button>
+                  <div class="toolbar-sep"></div>
+                  <button onclick="fmt('insertUnorderedList')" title="Lista">≡</button>
+                  <button onclick="fmt('insertOrderedList')" title="Lista numerada">1.</button>
+                  <div class="toolbar-sep"></div>
+                  <button onclick="fmt('createLink',prompt('URL:'))" title="Enlace">🔗</button>
+                  <button onclick="fmt('removeFormat')" title="Limpiar formato">✕</button>
+                </div>
+                <div class="wysiwyg" id="wysiwyg" contenteditable="true" oninput="updateSeoPreview()">
+                  <p>Comenzá a escribir tu artículo aquí...</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="editor-card">
+              <h3>🖼️ Imagen Destacada</h3>
+              <div class="form-field">
+                <label>URL de la Imagen</label>
+                <input type="text" id="art-img" placeholder="https://..." />
+              </div>
+              <div class="form-field">
+                <label>Alt-text (SEO de imagen)</label>
+                <input type="text" id="art-alt" placeholder="Descripción de la imagen para Google..." oninput="updateSeoPreview()" />
+                <div class="char-count" id="alt-count">0 / 125</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: SEO + SETTINGS -->
+          <div style="display:flex;flex-direction:column;gap:1.5rem;">
+
+            <!-- PUBLISH -->
+            <div class="editor-card">
+              <h3>📤 Publicación</h3>
+              <div class="form-field">
+                <label>Categoría</label>
+                <select id="art-cat">
+                  <option value="tarot">Tarot</option>
+                  <option value="numerologia">Numerología</option>
+                  <option value="horoscopo">Horóscopo</option>
+                  <option value="misterio">Misterio</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label>Estado</label>
+                <select id="art-status">
+                  <option value="draft">Borrador</option>
+                  <option value="published">Publicado</option>
+                </select>
+              </div>
+              <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+                <button class="btn-sm btn-primary-sm" onclick="saveArticle()" style="flex:1;">✦ Guardar</button>
+                <button class="btn-sm btn-ghost-sm" onclick="previewArticle()">Vista Previa</button>
+              </div>
+            </div>
+
+            <!-- SEO -->
+            <div class="editor-card">
+              <h3>🔍 SEO del Artículo</h3>
+
+              <div class="seo-score" id="seo-score-bar">
+                <span class="seo-label">Puntuación SEO:</span>
+                <div class="seo-bar" style="flex:1;">
+                  <div class="seo-bar-fill" id="seo-fill" style="width:0%;background:var(--red);"></div>
+                </div>
+                <span class="seo-label" id="seo-pct">0%</span>
+              </div>
+
+              <div id="seo-tips" style="display:flex;flex-direction:column;gap:0.35rem;margin-bottom:1rem;"></div>
+
+              <div class="form-field">
+                <label>Meta Title <small style="color:var(--text-muted)">(50–60 chars ideal)</small></label>
+                <input type="text" id="seo-title" placeholder="Título SEO..." oninput="updateSeoPreview()" />
+                <div class="char-count" id="seo-title-count">0 / 60</div>
+              </div>
+              <div class="form-field">
+                <label>Meta Description <small style="color:var(--text-muted)">(120–160 chars)</small></label>
+                <textarea id="seo-desc" rows="3" placeholder="Descripción que aparece en Google..." oninput="updateSeoPreview()"></textarea>
+                <div class="char-count" id="seo-desc-count">0 / 160</div>
+              </div>
+              <div class="form-field">
+                <label>Keyword Principal</label>
+                <input type="text" id="seo-keyword" placeholder="Ej: lectura de tarot gratis" oninput="updateSeoPreview()" />
+              </div>
+
+              <!-- SERP PREVIEW -->
+              <div style="margin-top:1rem;padding:1rem;background:rgba(0,0,0,0.3);border-radius:0.5rem;border:1px solid rgba(255,255,255,0.05);">
+                <p style="font-size:0.6rem;font-family:var(--font-heading);letter-spacing:0.2em;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.5rem;">Vista previa en Google:</p>
+                <div id="serp-url" style="font-size:0.7rem;color:#8ab4f8;font-family:monospace;">astra.com/blog/tu-slug</div>
+                <div id="serp-title" style="font-size:0.95rem;color:#8ab4f8;margin:0.2rem 0;font-weight:bold;">Tu Meta Title aparece aquí</div>
+                <div id="serp-desc" style="font-size:0.8rem;color:#bdc1c6;line-height:1.5;">Tu meta description aparece aquí. Escribí algo que invite al clic.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PLACEHOLDER PAGES -->
+    <div class="page" id="page-tarot-config">
+      <div style="padding:2rem;text-align:center;padding-top:4rem;">
+        <div style="font-size:3rem;margin-bottom:1rem;">🔮</div>
+        <h2 style="font-family:var(--font-heading);color:var(--purple-bright);margin-bottom:0.5rem;">Configuración de Tarot</h2>
+        <p style="color:var(--text-muted);">Editá los textos de cada carta, sus interpretaciones y el prompt de la IA.<br>Esta sección se activa con la integración de Supabase.</p>
+      </div>
+    </div>
+
+    <div class="page" id="page-seo">
+      <div style="padding:2rem;">
+        <div class="editor-card" style="max-width:700px;">
+          <h3>🔍 SEO Global del Sitio</h3>
+          <div class="form-field"><label>Nombre del Sitio</label><input type="text" value="Astra — Tarot, Numerología & Misterio" /></div>
+          <div class="form-field"><label>Meta Description Global</label><textarea rows="3">Descubrí lo que las cartas y los números ocultan sobre tu destino. Lecturas de Tarot e IA mística en español.</textarea></div>
+          <div class="form-field"><label>Google Analytics ID</label><input type="text" placeholder="G-XXXXXXXXXX" /></div>
+          <div class="form-field"><label>Google Search Console (verification tag)</label><input type="text" placeholder="&lt;meta name='google-site-verification'...&gt;" /></div>
+          <div class="form-field"><label>AdSense Publisher ID</label><input type="text" placeholder="ca-pub-XXXXXXXXXXXXXXXX" /></div>
+          <button class="btn-sm btn-primary-sm">Guardar Configuración</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="page-premium">
+      <div style="padding:2rem;text-align:center;padding-top:4rem;">
+        <div style="font-size:3rem;margin-bottom:1rem;">⭐</div>
+        <h2 style="font-family:var(--font-heading);color:var(--gold);margin-bottom:0.5rem;">Gestión de Premium</h2>
+        <p style="color:var(--text-muted);">Integrá Stripe o MercadoPago para gestionar suscriptores.<br>Esta sección se activa en la fase de integración de pagos.</p>
+        <div style="margin-top:2rem;display:flex;gap:1rem;justify-content:center;">
+          <button class="btn-sm btn-primary-sm">Conectar Stripe</button>
+          <button class="btn-sm btn-ghost-sm">Conectar MercadoPago</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="page-ads">
+      <div style="padding:2rem;">
+        <div class="editor-card" style="max-width:700px;">
+          <h3>📢 Configuración de Publicidad</h3>
+          <div class="form-field"><label>AdSense Publisher ID</label><input type="text" placeholder="ca-pub-XXXXXXXXXXXXXXXX" /></div>
+          <div style="margin:1.5rem 0;padding:1rem;background:rgba(212,168,67,0.07);border:1px solid rgba(212,168,67,0.2);border-radius:0.5rem;">
+            <p style="font-family:var(--font-heading);font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:0.75rem;">Slots de publicidad activos</p>
+            <div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.85rem;color:var(--text-muted);">
+              <div style="display:flex;justify-content:space-between;"><span>Banner Hero (728×90)</span><span class="badge badge-published">Activo</span></div>
+              <div style="display:flex;justify-content:space-between;"><span>Cuadrado Mid-page (300×250)</span><span class="badge badge-published">Activo</span></div>
+              <div style="display:flex;justify-content:space-between;"><span>Banner Blog (728×90)</span><span class="badge badge-draft">Inactivo</span></div>
+            </div>
+          </div>
+          <button class="btn-sm btn-primary-sm">Guardar</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // ARTICLES DATA
+  let articles = [
+    { id:1, title:"Las 5 cartas del Tarot que predicen cambios radicales", cat:"tarot", status:"published", date:"7 Mar 2025", views:1842 },
+    { id:2, title:"El triángulo de las Bermudas: lo que la ciencia calla", cat:"misterio", status:"published", date:"5 Mar 2025", views:3291 },
+    { id:3, title:"Tu Número de Sombra: el lado oscuro de tu camino de vida", cat:"numerologia", status:"draft", date:"3 Mar 2025", views:0 },
+    { id:4, title:"Escorpio y el portal de Plutón: semana de transformación total", cat:"horoscopo", status:"published", date:"1 Mar 2025", views:972 },
+    { id:5, title:"Casas embrujadas reales: los 7 casos más documentados", cat:"misterio", status:"published", date:"27 Feb 2025", views:4103 },
+    { id:6, title:"La carta de La Muerte no predice lo que creés", cat:"tarot", status:"draft", date:"25 Feb 2025", views:0 },
+  ];
+
+  // LOGIN
+  function doLogin() {
+    const u = document.getElementById('login-user').value;
+    const p = document.getElementById('login-pass').value;
+    if (u === 'admin' && p === 'astra2025') {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('admin').classList.add('active');
+      renderArticlesTable();
+    } else {
+      showToast('❌ Credenciales incorrectas', 'error');
+    }
+  }
+
+  function doLogout() {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('admin').classList.remove('active');
+    document.getElementById('login-user').value = '';
+    document.getElementById('login-pass').value = '';
+  }
+
+  // NAVIGATION
+  const pageTitles = {
+    dashboard: ['Dashboard', 'Resumen general de Astra'],
+    articles: ['Artículos', 'Gestión de contenido del blog'],
+    editor: ['Editor', 'Crear / editar artículo'],
+    'tarot-config': ['Config. Tarot', 'Ajustes del motor de lectura'],
+    seo: ['SEO Global', 'Configuración de búsqueda'],
+    premium: ['Premium', 'Gestión de suscriptores'],
+    ads: ['Publicidad', 'Configuración de AdSense'],
+  };
+
+  function showPage(id, navEl) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    if (navEl) navEl.classList.add('active');
+    const t = pageTitles[id] || [id, ''];
+    document.getElementById('page-title').textContent = t[0];
+    document.getElementById('page-sub').textContent = t[1];
+    if (id === 'articles') renderArticlesTable();
+  }
+
+  // ARTICLES TABLE
+  function renderArticlesTable() {
+    const tbody = document.getElementById('articles-tbody');
+    tbody.innerHTML = articles.map(a => `
+      <tr>
+        <td style="font-family:var(--font-heading);font-size:0.82rem;max-width:280px;line-height:1.3;">${a.title}</td>
+        <td><span class="badge badge-${a.cat}">${a.cat}</span></td>
+        <td><span class="badge badge-${a.status}">${a.status === 'published' ? 'Publicado' : 'Borrador'}</span></td>
+        <td style="color:var(--text-muted);font-size:0.85rem;">${a.date}</td>
+        <td style="color:var(--text-muted);font-size:0.85rem;">${a.views.toLocaleString()}</td>
+        <td>
+          <div class="table-actions">
+            <button class="btn-sm btn-ghost-sm" onclick="editArticle(${a.id})">Editar</button>
+            <button class="btn-sm btn-danger-sm" onclick="deleteArticle(${a.id})">Eliminar</button>
+          </div>
+        </td>
+      </tr>`).join('');
+    document.getElementById('article-count').textContent = articles.length;
+  }
+
+  function editArticle(id) {
+    const a = articles.find(x => x.id === id);
+    if (!a) return;
+    document.getElementById('art-title').value = a.title;
+    document.getElementById('art-slug').value = a.title.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+    document.getElementById('art-cat').value = a.cat;
+    document.getElementById('art-status').value = a.status;
+    document.getElementById('wysiwyg').innerHTML = '<p>Contenido del artículo...</p>';
+    showPage('editor', null);
+    updateSeoPreview();
+    showToast('✦ Artículo cargado en el editor');
+  }
+
+  function editNew() {
+    document.getElementById('art-title').value = '';
+    document.getElementById('art-slug').value = '';
+    document.getElementById('art-excerpt').value = '';
+    document.getElementById('wysiwyg').innerHTML = '<p>Comenzá a escribir tu artículo aquí...</p>';
+    document.getElementById('seo-title').value = '';
+    document.getElementById('seo-desc').value = '';
+    document.getElementById('seo-keyword').value = '';
+    updateSeoPreview();
+  }
+
+  function deleteArticle(id) {
+    if (!confirm('¿Eliminar este artículo?')) return;
+    articles = articles.filter(a => a.id !== id);
+    renderArticlesTable();
+    showToast('✦ Artículo eliminado', 'success');
+  }
+
+  function saveArticle() {
+    const title = document.getElementById('art-title').value.trim();
+    if (!title) { showToast('Ingresá un título', 'error'); return; }
+    const newArt = {
+      id: Date.now(), title,
+      cat: document.getElementById('art-cat').value,
+      status: document.getElementById('art-status').value,
+      date: new Date().toLocaleDateString('es-AR',{day:'numeric',month:'short',year:'numeric'}),
+      views: 0,
+    };
+    articles.unshift(newArt);
+    showToast('✦ Artículo guardado correctamente', 'success');
+  }
+
+  function previewArticle() {
+    showToast('Vista previa disponible en integración con Supabase');
+  }
+
+  // WYSIWYG
+  function fmt(cmd, val) {
+    document.getElementById('wysiwyg').focus();
+    document.execCommand(cmd, false, val || null);
+  }
+  function fmtBlock(tag) {
+    document.getElementById('wysiwyg').focus();
+    document.execCommand('formatBlock', false, tag);
+  }
+
+  // SEO PREVIEW & SCORING
+  function updateSeoPreview() {
+    const title = document.getElementById('art-title').value;
+    const slug = title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,'-');
+    if (!document.getElementById('art-slug').value) {
+      document.getElementById('art-slug').value = slug;
+    }
+
+    const metaTitle = document.getElementById('seo-title').value || title;
+    const metaDesc = document.getElementById('seo-desc').value;
+    const keyword = document.getElementById('seo-keyword').value;
+    const alt = document.getElementById('art-alt').value;
+    const slugVal = document.getElementById('art-slug').value;
+
+    // Counts
+    setCount('seo-title-count', metaTitle.length, 60, 50, 60);
+    setCount('seo-desc-count', metaDesc.length, 160, 120, 160);
+    setCount('alt-count', alt.length, 125, 50, 125);
+
+    // SERP
+    document.getElementById('serp-url').textContent = `astra.com/blog/${slugVal || 'tu-slug'}`;
+    document.getElementById('serp-title').textContent = metaTitle || 'Tu Meta Title aparece aquí';
+    document.getElementById('serp-desc').textContent = metaDesc || 'Tu meta description aparece aquí. Escribí algo que invite al clic.';
+
+    // Score
+    let score = 0;
+    const tips = [];
+    if (title.length >= 30) { score += 20; tips.push({t:'✓ Título del artículo completo',s:'good'}); }
+    else tips.push({t:'✗ El título del artículo es muy corto',s:'bad'});
+    if (metaTitle.length >= 50 && metaTitle.length <= 60) { score += 20; tips.push({t:'✓ Meta Title en rango ideal',s:'good'}); }
+    else if (metaTitle.length > 0) { score += 10; tips.push({t:'⚠ Meta Title fuera del rango ideal (50-60 chars)',s:'warn'}); }
+    else tips.push({t:'✗ Falta el Meta Title',s:'bad'});
+    if (metaDesc.length >= 120 && metaDesc.length <= 160) { score += 20; tips.push({t:'✓ Meta Description en rango ideal',s:'good'}); }
+    else if (metaDesc.length > 0) { score += 8; tips.push({t:'⚠ Meta Description fuera del rango (120-160 chars)',s:'warn'}); }
+    else tips.push({t:'✗ Falta la Meta Description',s:'bad'});
+    if (keyword && title.toLowerCase().includes(keyword.toLowerCase())) { score += 20; tips.push({t:'✓ Keyword en el título',s:'good'}); }
+    else if (keyword) tips.push({t:'⚠ La keyword no aparece en el título',s:'warn'});
+    else tips.push({t:'✗ Definí una keyword principal',s:'bad'});
+    if (alt.length >= 20) { score += 20; tips.push({t:'✓ Alt-text de imagen completo',s:'good'}); }
+    else if (alt.length > 0) tips.push({t:'⚠ Alt-text demasiado corto',s:'warn'});
+    else tips.push({t:'✗ Falta el Alt-text de la imagen',s:'bad'});
+
+    const fill = document.getElementById('seo-fill');
+    const pct = document.getElementById('seo-pct');
+    fill.style.width = score + '%';
+    fill.style.background = score >= 80 ? 'var(--green)' : score >= 50 ? 'var(--gold)' : 'var(--red)';
+    pct.textContent = score + '%';
+    pct.style.color = score >= 80 ? 'var(--green)' : score >= 50 ? 'var(--gold)' : 'var(--red)';
+
+    document.getElementById('seo-tips').innerHTML = tips.slice(0,4).map(t =>
+      `<div class="seo-tip ${t.s}">${t.t}</div>`).join('');
+  }
+
+  function setCount(id, len, max, min, idealMax) {
+    const el = document.getElementById(id);
+    el.textContent = `${len} / ${max}`;
+    el.className = 'char-count ' + (len >= min && len <= idealMax ? 'char-good' : len > idealMax ? 'char-bad' : len > 0 ? 'char-warn' : '');
+  }
+
+  // TOAST
+  function showToast(msg, type='success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type} show`;
+    setTimeout(() => t.classList.remove('show'), 3500);
+  }
+
+  // INIT
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') doLogin();
+  });
+</script>
+</body>
+</html>
